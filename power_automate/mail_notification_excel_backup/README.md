@@ -22,35 +22,71 @@
 2. 確認 SharePoint 上 Excel 提交期限清單資料是否正確。[📗 excel01_deadline.xlsx](./examples/deadline.xlsx)
 3. 必要時，可由 Flow 管理者或共享者手動執行流程進行測試或補執行。[📧 mail02_flow成功執行電郵.msg](./examples/sample_mail02_flow成功執行電郵.msg)
 
+![rpa_04自動執行成功.JPG](./images/rpa_04自動執行成功.JPG)
+
 ## 3. 自動化流程-設計與實作開發 📲
 
-### 3.1 參考圖檔
-以下為流程設計與設定相關畫面：
-- [rpa_01-1設定flow.JPG](./images/rpa_01-1設定flow.JPG)
-- [rpa_01-2設定節點.JPG](./images/rpa_01-2設定節點.JPG)
-- [rpa_02-1定時器.JPG](./images/rpa_02-1定時器.JPG)
-- [rpa_02-2讀取表格.JPG](./images/rpa_02-2讀取表格.JPG)
-- [rpa_02-3過濾日期範圍.JPG](./images/rpa_02-3過濾日期範圍.JPG)
-- [rpa_02-4判斷日期資料有無.JPG](./images/rpa_02-4判斷日期資料有無.JPG)
-- [rpa_02-5定義判斷結果.JPG](./images/rpa_02-5定義判斷結果.JPG)
-- [rpa_02-6取得篩選結果.JPG](./images/rpa_02-6取得篩選結果.JPG)
-- [rpa_02-7判斷日期1-2日內.JPG](./images/rpa_02-7判斷日期1-2日內.JPG)
-- [rpa_02-8定義判斷日期1-2日內結果.JPG](./images/rpa_02-8定義判斷日期1-2日內結果.JPG)
-- [rpa_02-9設定提醒電郵.JPG](./images/rpa_02-9設定提醒電郵.JPG)
-- [rpa_03-1判斷當天日期.JPG](./images/rpa_03-1判斷當天日期.JPG)
-- [rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
-- [rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
-- [rpa_03-4設定排程電郵.JPG](./images/rpa_03-4設定排程電郵.JPG)
-- [rpa_04自動執行成功.JPG](./images/rpa_04自動執行成功.JPG)
-- [rpa_10-1匯出flow.JPG](./images/rpa_10-1匯出flow.JPG)
-- [rpa_10-2匯出flow細項設定.JPG](./images/rpa_10-2匯出flow細項設定.JPG)
-- [rpa_10-3取得zip檔案夾.JPG](./images/rpa_10-3取得zip檔案夾.JPG)
-- [rpa_11-1匯入flow.JPG](./images/rpa_11-1匯入flow.JPG)
-- [rpa_11-2匯入zip檔案夾.JPG](./images/rpa_11-2匯入zip檔案夾.JPG)
-- [rpa_11-3選取匯入flow讀取權限.JPG](./images/rpa_11-3選取匯入flow讀取權限.JPG)
-- [rpa_11-4指定完成flow讀取權限.JPG](./images/rpa_11-4指定完成flow讀取權限.JPG)
-- [rpa_11-5成功匯入flow.JPG](./images/rpa_11-5成功匯入flow.JPG)
-- [rpa_11-6成功匯入flow尚待啟用.JPG](./images/rpa_11-6成功匯入flow尚待啟用.JPG)
+### 3.1 開發 Flow
+
+<details><summary>步驟 1. 開啟 Power Automate 建立新的 Flow 架構</summary>
+
+![rpa_01-1設定flow.JPG](./images/rpa_01-1設定flow.JPG)
+![rpa_01-2設定節點.JPG](./images/rpa_01-2設定節點.JPG)
+</details>
+
+<details><summary>步驟 2. 建立定時器、讀取並過濾 Excel 表格資料</summary>
+
+![rpa_02-1定時器.JPG](./images/rpa_02-1定時器.JPG)
+![rpa_02-2讀取表格.JPG](./images/rpa_02-2讀取表格.JPG)
+![rpa_02-3過濾日期範圍.JPG](./images/rpa_02-3過濾日期範圍.JPG)
+</details>
+
+<details><summary>步驟 3. 判斷日期資料是否為1~2日前或當天</summary>
+
+![rpa_02-4判斷日期資料有無.JPG](./images/rpa_02-4判斷日期資料有無.JPG)
+![rpa_02-5定義判斷結果.JPG](./images/rpa_02-5定義判斷結果.JPG)
+![rpa_02-6取得篩選結果.JPG](./images/rpa_02-6取得篩選結果.JPG)
+![rpa_02-7判斷日期1-2日內.JPG](./images/rpa_02-7判斷日期1-2日內.JPG)
+![rpa_02-8定義判斷日期1-2日內結果.JPG](./images/rpa_02-8定義判斷日期1-2日內結果.JPG)
+![rpa_03-1判斷當天日期.JPG](./images/rpa_03-1判斷當天日期.JPG)
+</details>
+
+<details><summary>步驟 4. 設定電郵主旨、內容、收件者</summary>
+
+![rpa_02-9設定提醒電郵.JPG](./images/rpa_02-9設定提醒電郵.JPG)
+![rpa_03-4設定排程電郵.JPG](./images/rpa_03-4設定排程電郵.JPG)
+</details>
+
+<details><summary>步驟 5. 建立 Excel 檔案的檢查與複製機制</summary>
+
+![rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
+![rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
+</details>
+
+<details><summary>步驟 6. 建立 Excel 檔案的檢查與複製機制</summary>
+
+![rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
+![rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
+</details>
+
+### 3.2 匯出/匯入 Flow
+<details><summary>如何在雲端流程匯出 Flow</summary>
+
+![rpa_10-1匯出flow.JPG](./images/rpa_10-1匯出flow.JPG)
+![rpa_10-2匯出flow細項設定.JPG](./images/rpa_10-2匯出flow細項設定.JPG)
+![rpa_10-3取得zip檔案夾.JPG](./images/rpa_10-3取得zip檔案夾.JPG)
+</details>
+
+<details><summary>如何在雲端流程匯入 Flow</summary>
+
+![rpa_11-1匯入flow.JPG](./images/rpa_11-1匯入flow.JPG)
+![rpa_11-2匯入zip檔案夾.JPG](./images/rpa_11-2匯入zip檔案夾.JPG)
+![rpa_11-3選取匯入flow讀取權限.JPG](./images/rpa_11-3選取匯入flow讀取權限.JPG)
+![rpa_11-4指定完成flow讀取權限.JPG](./images/rpa_11-4指定完成flow讀取權限.JPG)
+![rpa_11-5成功匯入flow.JPG](./images/rpa_11-5成功匯入flow.JPG)
+![rpa_11-6成功匯入flow尚待啟用.JPG](./images/rpa_11-6成功匯入flow尚待啟用.JPG)
+![rpa_04自動執行成功.JPG](./images/rpa_04自動執行成功.JPG)
+</details>
 
 ### 3.2 自動化流程概述
 1. 定時觸發：每日排程執行 Flow。
