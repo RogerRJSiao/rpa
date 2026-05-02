@@ -36,22 +36,50 @@
 
 <details><summary>步驟 2. 建立定時器、讀取並過濾 Excel 表格資料</summary>
 
+> **節點 Recurrence:**
+> - 時區請設定為 Taipei (UTC+08:00)，Start time 欄位實際仍以 UTC 時間表示，格式為 yyyy-MM-ddTHH:mm:ss.sssZ。Flow 執行時會依所選時區自動轉換。
+
 ![rpa_02-1定時器.JPG](./images/rpa_02-1定時器.JPG)
+
+> **節點 List rows present in a table:**
+> - xlsx 檔案必須在 SharePoint 的某一頻道。
+> - xlsx 檔案的讀取範圍，必須完成「設定成表格」，並且該 Table 名稱不得重複，欄位名稱也不得重複。
+> - 若有排序需求，建議在 xlsx 原始資料處理好，或於 Order By 鍵入，如 `due_date asc`。
+
 ![rpa_02-2讀取表格.JPG](./images/rpa_02-2讀取表格.JPG)
+
+> **節點 Filter array:**
+> - 判別日期範圍，可用 `formatDateTime(utcNow(), 'yyyy/MM/dd')`，但後面格式需與原資料格式相同。亦可使用 `addDays(utcNow(), 0, 'yyyy/MM/dd')`。
+
 ![rpa_02-3過濾日期範圍.JPG](./images/rpa_02-3過濾日期範圍.JPG)
 </details>
 
 <details><summary>步驟 3. 判斷日期資料是否為1~2日前或當天</summary>
+
+> **節點 Condition:**
+> - 計數轉型：判斷條件若要計數，要在外層括上 `int()`，如 `int(length(body('Filter_array')))`，透過強制轉型成整數的資料型別。
+> - Run After 設定：Settings 要同時勾選「Is successful」及「Is skipped」這兩項，避免結果 False 發生中斷的情況。這裡是為了確保最終的「Flow 執行完畢」節點可被執行。
+> - 多重判斷順序：使用左上的 And/Or，這裡是分成兩階段判斷，先判斷日期在 1~2 日內到期，再判斷是否為當天(如 `addDays(utcNow(), 0, 'yyyy/MM/dd')`)。
+> - 判斷式設定時，選擇 Or 要注意最下方的空值 is equal to 空值，執行結果反而是 True，為微軟不合理的設計(bug)。建議改用 And 指定日期區間，用大小於包夾正確的日期範圍。
 
 ![rpa_02-4判斷日期資料有無.JPG](./images/rpa_02-4判斷日期資料有無.JPG)
 ![rpa_02-5定義判斷結果.JPG](./images/rpa_02-5定義判斷結果.JPG)
 ![rpa_02-6取得篩選結果.JPG](./images/rpa_02-6取得篩選結果.JPG)
 ![rpa_02-7判斷日期1-2日內.JPG](./images/rpa_02-7判斷日期1-2日內.JPG)
 ![rpa_02-8定義判斷日期1-2日內結果.JPG](./images/rpa_02-8定義判斷日期1-2日內結果.JPG)
+
+> **節點 Compose:**
+> - 這裡使用 `first()` 取出最小日期值，是基於節點 List rows present in a table 已依日期完成排序。
+
 ![rpa_03-1判斷當天日期.JPG](./images/rpa_03-1判斷當天日期.JPG)
 </details>
 
 <details><summary>步驟 4. 設定電郵主旨、內容、收件者</summary>
+
+> **節點 Send an email (V2):**
+> - Email Subject、Body 皆可使用前段節點的輸出變數。如 Compose 結果是 `outputs('Compose')?['weekno']`。
+> - Email Body 編輯器操作不易，易發生跑版錯位，建議通篇先以純文字貼上，再逐步套用粗體、底色、超連結等格式。
+> - 完整時戳設定函式是 `formatDateTime(addHours(utcNow(), 8), 'yyyy/MM/dd HH:mm:ss')`。
 
 ![rpa_02-9設定提醒電郵.JPG](./images/rpa_02-9設定提醒電郵.JPG)
 ![rpa_03-4設定排程電郵.JPG](./images/rpa_03-4設定排程電郵.JPG)
@@ -59,11 +87,10 @@
 
 <details><summary>步驟 5. 建立 Excel 檔案的檢查與複製機制</summary>
 
-![rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
-![rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
-</details>
-
-<details><summary>步驟 6. 建立 Excel 檔案的檢查與複製機制</summary>
+> **節點 Get file content 與 Create file:**
+> - 若要同時從 SharePoint 中複製檔案+重新命名(如檔名押上日期)，這兩個節點串接會是首推的建議組合。
+> - 這兩個節點都有 SharePoint、OneDrive 版本，請選取 SharePoint 的節點。
+> - Create file 的資料來源是在 File Content 設定，選取 File Content 即可。若選不到，請檢查前一節點 Get file content 設定 File Identifier。
 
 ![rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
 ![rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
