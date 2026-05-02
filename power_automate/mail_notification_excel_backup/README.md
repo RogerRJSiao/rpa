@@ -129,7 +129,7 @@ flowchart TD
 ```
 #### **主要實作 & Flow 執行項目**
 1. **定時觸發**：每日排程執行 Flow。
-2. **檢核期限**：比對 SharePoint 或 Excel 中的提交期限清單。
+2. **檢核期限**：比對 SharePoint 雲端 Excel 檔案 Table 中寫的提交期限。
 3. **發送提醒**：依時程寄送提醒電郵給填報者，並包含必要連結與說明。
 4. **異常處理**：若流程失敗或資料異常，通知管理者並記錄狀態。
 5. **備份管理**：到期當日自動複製進度檔，並於檔名標註提交日期以保留版本。
@@ -139,9 +139,9 @@ flowchart TD
 | 串接服務 | 基本設定/需求 | 備註 |
 | --- | --- | --- |
 | Power Automate | Power Automate (雲端版) 帳戶 | 雲端版可以 import/export Flow |
-| SharePoint | 取得目錄、文件的路徑來源 | 必須是以「頻道」建立群組的檔案夾 (不是) |
+| SharePoint | 取得目錄、文件的路徑來源 | 必須是以「頻道」建立群組的檔案夾 (不是用 Teams 自建團隊的檔案夾) |
 | Outlook 帳戶 | 將自己的電郵網址設為電郵的「寄件者」 | 同微軟 AD 帳號，域名是公司或集團專屬的 |
 | Excel 企業版 | Excel 檔案亦可從地端完整上載 | 如果是用 OneDrive 用戶，應另外購買企業方案。<br>檔案裡面必須有已設為表格的作為參照。<br>引用 xlsx 完整路徑長度有限制，否則會讀取失敗。 |
 
-- 實作檔案(ZIP)：[可在 Power Automate 雲端匯入的 zip](./mail_notification_excel_backup_v1.zip)
+- v1 實作檔案(ZIP)：[可在 Power Automate 雲端匯入的 zip](./mail_notification_excel_backup_v1.zip)
 
