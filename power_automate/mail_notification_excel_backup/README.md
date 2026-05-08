@@ -50,6 +50,7 @@
 
 > **節點 Filter array:**
 > - 判別日期範圍，可用 `formatDateTime(utcNow(), 'yyyy/MM/dd')`，但後面格式需與原資料格式相同。亦可使用 `addDays(utcNow(), 0, 'yyyy/MM/dd')`。
+> - 用於判斷檔案命名格式之前，可搭配 Get files (properties only) 產出的結果 body.value，判斷式 `item()?['{FilenameWithExtension}'] contains concat('數位化轉型-', addDays(utcNow(), 0, 'yyyyMMdd'), '.xlsx')`。
 
 ![rpa_02-3過濾日期範圍.JPG](./images/rpa_02-3過濾日期範圍.JPG)
 </details>
@@ -62,6 +63,7 @@
 > - 多重判斷順序：使用左上的 And/Or，這裡是分成兩階段判斷，先判斷日期在 1~2 日內到期，再判斷是否為當天(如 `addDays(utcNow(), 0, 'yyyy/MM/dd')`)。
 > - 判斷式設定時，選擇 Or 要注意最下方的空值 is equal to 空值，執行結果反而是 True，為微軟不合理的設計(bug)。建議改用 And 指定日期區間，用大小於包夾正確的日期範圍。
 > - 想要使用大小於、等於對日期與時間進行比較的話，由於這裡無法像 SQL 讓 String 比大小，故強烈建議要搭配 tick()，將日期格式統一轉換成數值。(BTW 排查已執行 Flow 可能也看不出問題，因為目前這套雲端流程似乎會無法解析)
+> - 引用來自其他節點的結果時，若節點名稱有以空白命名的，都需要將它改成下底線 "_"。
 
 ![rpa_02-4判斷日期資料有無.JPG](./images/rpa_02-4判斷日期資料有無.JPG)
 ![rpa_02-5定義判斷結果.JPG](./images/rpa_02-5定義判斷結果.JPG)
@@ -88,13 +90,41 @@
 
 <details><summary>步驟 5. 建立 Excel 檔案的檢查與複製機制</summary>
 
+> **節點 Get files (properties only):**
+> - 若要限制檢索範圍，可到 advanced parameters 透過 Limit Entries to Folder 點擊資料夾圖示選出資料夾，再把 Include Nested Item 設為 No 訂為只看當層目錄。
+> - 若要判斷完整檔名，可改用 Filter Query，判別式 `outputs('Get_files_(properties_only)')?['body/value'] contains addDays(utcNow(), 0, 'yyyyMMdd')`。
+> - 若要進行模糊判斷(如只判斷日期)，則不建議使用 Filter Query，改用後段的「篩選陣列」來處理，更具彈性的邏輯。
+> - 與 Get file properties 不同的是，無法用上述這些進階參數。
+
+![rpa_06-1遍歷目錄檔案.JPG](./images/rpa_06-1遍歷目錄檔案.JPG)
+![rpa_06-2篩選日期戳印.JPG](./images/rpa_06-2篩選日期戳印.JPG)
+
+> **節點 Condition: 判斷相同日期戳印的檔案是否存在**
+> - 此處使用 `length(body('Filter_array_日期戳印'))` 判斷結果數量。
+> - 若回傳 0，代表當日偵測不到同名檔案，流程將走 `Get file content` + `Create file` 分支。
+> - 若回傳大於 0，則代表已有同日檔案，可改由 Teams 或通知節點處理。
+
+![rpa_06-3判斷日期與檔名.JPG](./images/rpa_06-3判斷日期與檔名.JPG)
+
 > **節點 Get file content 與 Create file:**
 > - 若要同時從 SharePoint 中複製檔案+重新命名(如檔名押上日期)，這兩個節點串接會是首推的建議組合。
 > - 這兩個節點都有 SharePoint、OneDrive 版本，請選取 SharePoint 的節點。
 > - Create file 的資料來源是在 File Content 設定，選取 File Content 即可。若選不到，請檢查前一節點 Get file content 設定 File Identifier。
+> - Create file 必須放上相同檔名檢查，如 Get files (properties only) 加上 Condition 兩節點，否則會出現報錯。
 
 ![rpa_03-2複製檔案-取得內容.JPG](./images/rpa_03-2複製檔案-取得內容.JPG)
 ![rpa_03-3複製檔案-建立新檔.JPG](./images/rpa_03-3複製檔案-建立新檔.JPG)
+</details>
+
+<details><summary>步驟 6. Teams 訊息通知設定</summary>
+
+> **節點 Post message in a chat or channel**
+> - 若要避免干擾團隊頻道，訊息僅會傳送給自己，可將 Post as、Post in 分別設為 Flow bot 及 Chat with Flow bot。
+> - 本例中，當相同日期戳印檔案已存在時，使用 Teams 訊息回報並跳過 Create file。
+
+![rpa_06-4傳送Teams通知.JPG](./images/rpa_06-4傳送Teams通知.JPG)
+![rpa_06-5收到Teams通知.JPG](./images/rpa_06-5收到Teams通知.JPG)
+
 </details>
 
 ### 3.2 匯出/匯入 Flow
