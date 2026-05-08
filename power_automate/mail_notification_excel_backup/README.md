@@ -174,4 +174,7 @@ flowchart TD
 | Excel 企業版 | Excel 檔案亦可從地端完整上載 | 如果是用 OneDrive 用戶，應另外購買企業方案。<br>檔案裡面必須有已設為表格的作為參照。<br>引用 xlsx 完整路徑長度有限制，否則會讀取失敗。 |
 
 - v1 實作檔案(ZIP)：[可在 Power Automate 雲端匯入的 zip](./mail_notification_excel_backup_v1.zip)
+- v2 實作檔案(ZIP)：[可在 Power Automate 雲端匯入的 zip](./mail_notification_excel_backup_v2.zip) 
+  - 2026-05-04 加入新功能：完整檔名偵測、Teams 通知。
+  - 2026-05-04 修正原功能：SharePoint 相同檔名報錯問題。
 
