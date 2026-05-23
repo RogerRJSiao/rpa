@@ -22,6 +22,14 @@
     ![Docker Desktop 安裝畫面](images/n8n_install_01-6_DockerDesktop.png)
     ![Docker Desktop 安裝畫面](images/n8n_install_01-7_DockerDesktop.png)
 
+> 更新 WSL 失敗 (WSL update failed) 的排除方式
+> - Mac 用戶：重新開機
+> - Windows 用戶：
+>   1. 重新啟動電腦
+>   2. 若無法排除，在終端機輸入 `wsl --update` 或 `wsl --install`
+>   3. 若仍無法排除，到【控制台 > 程式集 > Windows 子系統 Linux版】勾掉，再到 [WSL 官方 Github](https://github.com/microsoft/WSL/releases) 下載最新版 .msi 安裝檔，最後重新啟動電腦。
+
+
 ## 下載並啟動 n8n
 
 > 目前建議透過 Docker 來執行 n8n，這樣比較穩定且免安裝 Node.js 環境。不只安裝速度也較快，對 PC 的作業系統影響也會較小。
@@ -43,6 +51,36 @@
     ![n8n安裝畫面](images/n8n_install_02-6_n8n.png)
 3. 在瀏覽器中即可看到 n8n 的使用者介面，開始建立工作流程。
     ![n8n安裝畫面](images/n8n_install_02-7_n8n.png)
+
+## 關閉 n8n
+
+如果你是透過 Docker 啟動 n8n，以下兩種方法都可以關閉它：
+
+- 透過命令列停止：
+  ```powershell
+  docker stop n8n
+  ```
+  這會停止名稱為 `n8n` 的容器。
+
+- 透過 Docker Desktop：
+  1. 開啟 Docker Desktop。
+  2. 在「Containers / Apps」頁面找到 `n8n` 容器。
+  3. 點選 `Stop` 按鈕停止容器。
+
+## 重新啟動 n8n
+
+如果你想重新啟動已停止的 `n8n` 容器，可以：
+
+- 直接重新執行最初的啟動指令：
+  ```powershell
+  docker run -it --rm --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/n8nio/n8n
+  ```
+  - 如果先前已使用 `--rm` 啟動，容器停止後會被移除，此時必須重新執行此指令。
+
+- 或者使用 Docker Desktop 重新啟動：
+  1. 開啟 Docker Desktop。
+  2. 在「Containers / Apps」找到 `n8n` 容器。
+  3. 點選 `Start` 或 `Restart`。
 
 ## 進階建議
 
