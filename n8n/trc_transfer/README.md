@@ -8,6 +8,8 @@
 
 ![台鐵時刻表查詢與搭乘規劃v1](../images/n8n_台鐵山海線搭乘規劃v1.png)
 
+![台鐵時刻表查詢與搭乘規劃v1](../images/n8n_台鐵山海線搭乘規劃v1_output.png)
+
 ## 2. 設計概念
 
 - **網頁爬蟲資料擷取**：使用爬蟲技術取得最新時刻表資料，確保乘車規劃依據為最新營運資訊。
@@ -44,7 +46,7 @@
     ```n8n
     {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').minus({ days: 7 }) }}
     ```
-    
+
     ![On form submission](../images/n8n_台鐵山海線_01_form.png)
 
 - 比較時間點大小的方法：一種是直接以 'hh:MM' 格式，透過 is after 或 is before 搞定兩個時間點的大小。另一種方式是強制轉型成數字，用 is greater than 或 is less than 判斷。
