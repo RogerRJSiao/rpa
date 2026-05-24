@@ -89,7 +89,11 @@
     - 節點 `Sort` 可多重排序指定key。
     - 節點 `Remove Duplicates` 能指定或全選欄位，移除有重複的某幾筆(列)資料。
     - 節點 `Merge` 可用於多個來源的 JSON，合併成單一 JSON 輸出。
-    - 節點 `Code` 是撰寫 JS 原碼腳本，處理更複雜的讀取與轉換。(Docker 環境下的 Python 3 受限使用，待確認！)
+    - 節點 `Code` 是撰寫 JS 原碼腳本，處理更複雜的 JSON 讀取與轉換。
+        - 範例 1：[解析站別時刻 HTML 文本](js/parse_trc_HTML.js)
+        - 範例 2：[比對兩站的列車時刻內容](js/clean_trc_raw_data.js)
+        - 範例 3：[確認站別與列車方向關聯](js/check_trc_direction.js)
+        - 備註：Docker 環境下的 Python 3 受限使用。(待確認！)
 
 ### 5-3. 同步/非同步處理、檔案下載
 - 處理多個 `HTTP request` 串聯的效能問題：當串聯多個 HTTP request 節點時，可能造成記憶體不足，觸發讀取異常報錯，或降低 RPA 執行速度。故極度不建議前後「串聯」不只一個的爬蟲節點，應改以「並聯」形式可避開這個潛在問題，最後再以節點 `Merge` 合併輸出或處理多份 JSON 資料。    
