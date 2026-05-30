@@ -1,6 +1,6 @@
-﻿# n8n - 台鐵時刻表查詢與搭乘規劃自動化整理
+﻿# n8n - 台鐵時刻表查詢與搭乘規劃自動化整理 🚆
 
-## 1. 專案概述
+## 1. 專案概述 📝
 
 本專案針對台灣鐵路公司山線與海線交會路段，利用現行時刻表進行資料查詢、比對與搭乘規劃。
 
@@ -8,7 +8,7 @@
 
 ![台鐵時刻表查詢與搭乘規劃v1](../images/n8n_台鐵山海線搭乘規劃v1.png)
 
-## 2. 現況分析與設計概念
+## 2. 現況分析與設計概念 🔍
 
 - **現況分析**
     1. **轉乘查詢資料不夠完整**：官網的轉乘時間只能選取 20、30、50 分鐘以內，同時只顯示兩班次大於 5~10 分鐘的成功媒合轉乘班次，故無法取得轉乘站完整且可用的班次列表。
@@ -74,7 +74,7 @@
   - 檔案 3: [臺鐵時刻表2026-07-06_員林到大甲_彰化轉乘](output/臺鐵時刻表2026-07-06_員林到大甲_彰化轉乘_20260524_183553.csv)
   - 檔案 4: [臺鐵時刻表2026-07-06_員林到大甲_直達](output/臺鐵時刻表2026-07-06_員林到大甲_直達_20260524_183553.csv)
     
-## 3. 系統架構與資料流程
+## 3. 系統架構與資料流程 🏗️
 
 1. 輸入基本條件：以表單方式收集搭乘日期、轉乘站、起站、迄站等資訊，提供自動化查詢所需資料。
 2. 輸入驗證與日期處理：使用 `On form submission` 節點取得時戳，轉換為 `Asia/Taipei` 時區，並以時間比較及數字轉換檢查搭乘日與班次時間的合法性。
@@ -98,88 +98,88 @@ graph LR
     D2 --> E2[Export CSV <br> 匯出「限直達」規劃結果]
 ```
 
-## 4. ETL 步驟與資料集處理規則
+## 4. ETL 步驟與資料集處理規則 🔄
 
 > 本專案使用 n8n GUI + JS 進行資料清洗
 
-1. 自訂表單欄位驗證條件 (if not, 不處理)
-    - 起站與迄站不可相同。
+### Step 1. 自訂表單欄位驗證條件 (if not, 不處理)
+- 起站與迄站不可相同。
+    ```n8n GUI
+    {{ $json['開始'] }} is not equal to {{ $json['抵達'] }}
+    // 3390-員林 is not equal to 2200-大甲
+    ```
+- 預計搭乘日為必填，且可查詢日期限制為過去 7 天內，且不超過未來 3 個月。
+    ```n8n GUI
+    {{ $json["預計搭乘日"] }} is after or equal to {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').minus({ days: 7 }) }}
+    AND
+    {{ $json["預計搭乘日"] }} is before or equal to {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').plus({ months: 3 }) }}
+    // 2026-06-01T00:00:00.000Z is after or equal to [DateTime: 2026-05-23T07:54:34.922+08:00]
+    // 2026-06-01T00:00:00.000Z is before or equal to [DateTime: 2026-08-30T07:54:34.922+08:00]
+    ```
+### Step 2. 指定爬蟲資料範圍
+- 每次爬蟲只能指定單一車站(開始/轉乘/抵達)、單一日期。
+    ```n8n GUI
+    https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["開始"] }}
+    https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["轉乘站"] }}
+    https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["抵達"] }}
+    ```
+- 所有爬蟲資料完成後，將有 3 份資料集暫存系統。
+    - 產出的 JSON 資料結構，請先參考 [網頁爬蟲](#b-網頁爬蟲)
+
+### Step 3. 比對可用班次與車站排點 (前提：資料集 3 份都要完整爬完)
+- 列出可換乘車次順序
+    - [比對兩站的列車時刻內容](js/clean_trc_raw_data.js)
+    - 若允許轉乘，兩兩車站時刻比對，以轉乘站時刻比對起始站，再以轉乘站時刻比對抵達站。
+    - 若不轉乘(限直達)，只以抵達比對起始。
+    - 前者當主表是參照時刻表，後者附表是比對時刻表。
+    
+    > 原設計：比對同一車站不同車次間的可換乘時差 ❌
+    > 1. 原本有計畫要精細比對搭乘資訊，如轉乘站 A 車抵達時刻、B 車出發時刻的可換乘時間，但礙於爬蟲結果過大將影響 RPA 效能，而且台鐵常拿排點緩衝抵銷誤點的習慣，故決定都只用「抵達時刻」精準比對。
+    > 2. 某一站恰為某班次的終點站與始發站，該站的車站時刻表都會列出，放在「出發時間」這一欄。i.e. 終點站的「出發時間」是該班車的抵達時刻。❇️
+        
+- 判別行車方向
+    - [確認站別與列車方向關聯](js/check_trc_direction.js)
+    - 建立「行車方向參照表」✳️，能定義行車方向。如台中/豐原/沙鹿/大甲/追分/成功往南都取逆行，往北都都視為順行。
+
+    > 原設計：以車站編號、車次編號規則確認行車方向 ❌
+    > 1. 台鐵西部的車站編號，由北往南是逐漸變大，山線(台中線)車站大於海線車站。
+    >   - 如：海線 `2200-大甲`、`2230-沙鹿`，山線 `3340-新烏日`、`3300-臺中`，縱貫線(山海線匯合點) `1250-竹南`、`3360-彰化`。
+    > 2. 台鐵西部的逆順行，逆行等於南下，順行等於北上。
+    >   - 如：`區間 2501 (大甲→彰化)` 在大甲 ~ 彰化皆列為逆行列車，但 `區間 2601 (大甲→豐原)` 在大甲 ~ 追分是逆行，成功 ~ 台中 ~ 豐原改為順行。
+    > ==> 既然無法拿車站編號比大小分辨行車方向，只好根據「起迄站」的「南北相對位置」自建資料組，正確判斷山海線列車的順逆行。
+
+### Step 4. 篩除與排序預計輸出的資料
+- 修改輸出資料欄位寫入順序
+    - 產出的 JSON 資料結構，請先參考 [資料整理與格式化說明](#c-資料整理與格式化)
+
+- 建立輸出資料集的篩選機制
+    - 移除不匹配班次，開始站/抵達站任一站不為空字串。 
         ```n8n GUI
-        {{ $json['開始'] }} is not equal to {{ $json['抵達'] }}
-        // 3390-員林 is not equal to 2200-大甲
+        {{ $json.start_station }} is not empty
+        OR
+        {{ $json.arrival_station }} is not empty
         ```
-    - 預計搭乘日為必填，且可查詢日期限制為過去 7 天內，且不超過未來 3 個月。
+
+    - 不轉乘(限直達)清單：如果仍要列出起始站/終點站列車，只能仰賴這張「行車方向參照表」參照表，篩選並留下正確方向的車班。✳️
         ```n8n GUI
-        {{ $json["預計搭乘日"] }} is after or equal to {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').minus({ days: 7 }) }}
+        {{ $json.direction }} is equal to {{ $('直達方向判定').first().json["直達方向"] }}
+        ```
+
+    - 要轉乘清單：由於已篩除了兩兩比對後、沒有同時存在的班次，資料列表只會留下兩站都有出發時刻的班次，故能根據兩站的「出發時間」先後順序比大小。❇️
+        ```n8n GUI
+        {{ Number($json.transfer_time.replace(':', '')) }} is greater than {{ Number($json.start_time.replace(':', '')) || 0 }}
         AND
-        {{ $json["預計搭乘日"] }} is before or equal to {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').plus({ months: 3 }) }}
-        // 2026-06-01T00:00:00.000Z is after or equal to [DateTime: 2026-05-23T07:54:34.922+08:00]
-        // 2026-06-01T00:00:00.000Z is before or equal to [DateTime: 2026-08-30T07:54:34.922+08:00]
+        {{ Number($json.transfer_time.replace(':', '')) }} is less than {{ Number($json.arrival_time.replace(':', '')) || 2359 }}
         ```
-2. 指定爬蟲資料範圍
-    - 每次爬蟲只能指定單一車站(開始/轉乘/抵達)、單一日期。
-        ```n8n GUI
-        https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["開始"] }}
-        https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["轉乘站"] }}
-        https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["抵達"] }}
-        ```
-    - 所有爬蟲資料完成後，將有 3 份資料集暫存系統。
-        - 產出的 JSON 資料結構，請先參考 [網頁爬蟲](#5-2-網頁爬蟲)
+    
+- 排序清單內的資料，並移除重複項
+    - 不轉乘(限直達)清單：直接按照「起始站」的「出發時刻」正序排序。
+    - 要轉乘清單：先合併 2 份資料集 (Append 1.轉乘比起始站 + 2.轉乘站比對抵達站)，再按照「轉乘站」的「出發時刻」、「車次」進行正序排序。
+    - 最後都要移除重複項。
 
-3. 比對可用班次與車站排點 (前提：資料集 3 份都要完整爬完)
-    - 列出可換乘車次順序
-        - [比對兩站的列車時刻內容](js/clean_trc_raw_data.js)
-        - 若允許轉乘，兩兩車站時刻比對，以轉乘站時刻比對起始站，再以轉乘站時刻比對抵達站。
-        - 若不轉乘(限直達)，只以抵達比對起始。
-        - 前者當主表是參照時刻表，後者附表是比對時刻表。
-        
-        > 原設計：比對同一車站不同車次間的可換乘時差 ❌
-        > 1. 原本有計畫要精細比對搭乘資訊，如轉乘站 A 車抵達時刻、B 車出發時刻的可換乘時間，但礙於爬蟲結果過大將影響 RPA 效能，而且台鐵常拿排點緩衝抵銷誤點的習慣，故決定都只用「抵達時刻」精準比對。
-        > 2. 某一站恰為某班次的終點站與始發站，該站的車站時刻表都會列出，放在「出發時間」這一欄。i.e. 終點站的「出發時間」是該班車的抵達時刻。❇️
-            
-    - 判別行車方向
-        - [確認站別與列車方向關聯](js/check_trc_direction.js)
-        - 建立「行車方向參照表」✳️，能定義行車方向。如台中/豐原/沙鹿/大甲/追分/成功往南都取逆行，往北都都視為順行。
+## 5. 實作 RPA 重點技術 🤖
 
-        > 原設計：以車站編號、車次編號規則確認行車方向 ❌
-        > 1. 台鐵西部的車站編號，由北往南是逐漸變大，山線(台中線)車站大於海線車站。
-        >   - 如：海線 `2200-大甲`、`2230-沙鹿`，山線 `3340-新烏日`、`3300-臺中`，縱貫線(山海線匯合點) `1250-竹南`、`3360-彰化`。
-        > 2. 台鐵西部的逆順行，逆行等於南下，順行等於北上。
-        >   - 如：`區間 2501 (大甲→彰化)` 在大甲 ~ 彰化皆列為逆行列車，但 `區間 2601 (大甲→豐原)` 在大甲 ~ 追分是逆行，成功 ~ 台中 ~ 豐原改為順行。
-        > ==> 既然無法拿車站編號比大小分辨行車方向，只好根據「起迄站」的「南北相對位置」自建資料組，正確判斷山海線列車的順逆行。
-
-4. 篩除與排序預計輸出的資料
-    - 修改輸出資料欄位寫入順序
-        - 產出的 JSON 資料結構，請先參考 [資料整理與格式化說明](#5-3-資料整理與格式化)
-
-    - 建立輸出資料集的篩選機制
-        - 移除不匹配班次，開始站/抵達站任一站不為空字串。 
-            ```n8n GUI
-            {{ $json.start_station }} is not empty
-            OR
-            {{ $json.arrival_station }} is not empty
-            ```
-
-        - 不轉乘(限直達)清單：如果仍要列出起始站/終點站列車，只能仰賴這張「行車方向參照表」參照表，篩選並留下正確方向的車班。✳️
-            ```n8n GUI
-            {{ $json.direction }} is equal to {{ $('直達方向判定').first().json["直達方向"] }}
-            ```
-
-        - 要轉乘清單：由於已篩除了兩兩比對後、沒有同時存在的班次，資料列表只會留下兩站都有出發時刻的班次，故能根據兩站的「出發時間」先後順序比大小。❇️
-            ```n8n GUI
-            {{ Number($json.transfer_time.replace(':', '')) }} is greater than {{ Number($json.start_time.replace(':', '')) || 0 }}
-            AND
-            {{ Number($json.transfer_time.replace(':', '')) }} is less than {{ Number($json.arrival_time.replace(':', '')) || 2359 }}
-            ```
-        
-    - 排序清單內的資料，並移除重複項
-        - 不轉乘(限直達)清單：直接按照「起始站」的「出發時刻」正序排序。
-        - 要轉乘清單：先合併 2 份資料集 (Append 1.轉乘比起始站 + 2.轉乘站比對抵達站)，再按照「轉乘站」的「出發時刻」、「車次」進行正序排序。
-        - 最後都要移除重複項。
-
-## 5. 實作 RPA 重點技術
-
-### 5-1. 日期與時區應用
+### A. 日期與時區應用
 - 使用 `On form submission` 節點產生的時戳，透過 `.setZone('Asia/Taipei')` 轉換成台灣時區，並以 `.plus()` / `.minus()` 計算動態時間範圍。
     ```n8n
     {{ DateTime.fromISO($json["submittedAt"]).setZone('Asia/Taipei').minus({ days: 7 }) }}
@@ -187,7 +187,7 @@ graph LR
 - 比較時間大小的方式：可直接使用 `hh:MM` 格式搭配 `is after` / `is before`，也可將時間強制轉成數字，再以 `is greater than` / `is less than` 判斷。
     - 例如：```{{ Number($json.transfer_time.replace(':', '')) }}```
 
-### 5-2. 網頁爬蟲
+### B. 網頁爬蟲
 - 取得站別時刻表的 API 與網址格式：輸入下方網址可取得順行與逆行完整表格資訊，適用於 HTTP request 節點的 GET 請求，參數為搭乘日 `yyyy/MM/dd` 與站別代號-名稱。
    ```n8n
    https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["開始"] }}
@@ -210,7 +210,7 @@ graph LR
     ![爬蟲技術04](../images/n8n_台鐵山海線_02-4_webcrawling.png)
     ![爬蟲技術05](../images/n8n_台鐵山海線_03-1_datacleaning.png)
 
-### 5-3. 資料整理與格式化
+### C. 資料整理與格式化
 - 清洗資料並調整欄位順序：後續 `Convert to File` 節點會直接將 JSON 轉成 CSV。清洗時務必要維持欄位格式與欄位順序與 JSON key 一致。
     ```JS
     json: {
@@ -242,7 +242,7 @@ graph LR
         - 範例 3：[確認站別與列車方向關聯](js/check_trc_direction.js)
         - 備註：Docker 環境下 Python 3 使用受限，待確認。
 
-### 5-4. 同步/非同步處理與檔案下載
+### D. 同步/非同步處理與檔案下載
 - 連續串聯多個 `HTTP request` 節點可能造成記憶體不足或讀取異常，並影響執行效率。因此建議將爬蟲節點改為並聯，最後再用 `Merge` 節點合併輸出。
 - 確認交叉比對資料的取得時機：若 JS 中調用尚未完成的前置節點，可能產生 `undefined` 錯誤。建議搭配 `Merge` 節點，強制等待所有輸入節點完成後再執行後續邏輯。
     - 不合併資料時使用 Choose Branch 並勾選 `Wait for all Inputs to Arrive`。
@@ -253,9 +253,9 @@ graph LR
     臺鐵時刻表{{ $('輸入資料完整？').first().json['預計搭乘日'] }}_{{ $('輸入資料完整？').first().json['開始'].split('-')[1] }}到{{ $('輸入資料完整？').first().json['抵達'].split('-')[1] }}_{{ $('輸入資料完整？').first().json['轉乘站'].split('-')[1] }}轉乘_{{ $now.setZone('Asia/Taipei').format('yyyyMMdd_HHmmss') }}.csv
     ```
 
-## 6. 後續擴充建議
+## 6. 後續擴充建議 🚀
 
-### 6-1. 強化輸入驗證與錯誤處理
+### A. 強化輸入驗證與錯誤處理
 - **擴展表單的輸入驗證邏輯**
     - 新增起站與轉乘站、轉乘站與迄站的相對位置驗證（確保行車方向邏輯合理）。
     - 檢驗轉乘時間窗口是否足夠（例如最少 5~10 分鐘轉乘時間）。
@@ -265,7 +265,7 @@ graph LR
     - 依錯誤類型分類（網路超時、HTML 解析失敗、資料不符預期）並記錄詳細堆疊追蹤。
     - 提供使用者友善的錯誤訊息，而不是顯示原始技術錯誤資訊。
 
-### 6-2. 擴展資料來源與整合多運輸方式
+### B. 擴展資料來源與整合多運輸方式
 - **納入高鐵時刻表、客運班次整合**
     - 新增高鐵轉台鐵、台鐵轉高鐵的跨運輸方式轉乘比對規則。
     - 爬取客運時刻表 (如國光客運、統聯客運)，補足邊陲地區的最後一哩路需求。
@@ -274,7 +274,7 @@ graph LR
     - 將目前寫死在 JS 的行車方向定義改為從 Excel 或資料庫動態讀取。
     - 支援使用者自訂行車方向規則，適應未來台鐵改點或新路線開通。
 
-### 6-3. 增強監控、通知與輸出機制
+### C. 增強監控、通知與輸出機制
 - **通知整合**
     - 流程完成或失敗時發送郵件通知（包含下載連結或檔案摘要）。
     - 集成 Line Notify / Telegram 機器人，提供即時推播（需 Bot 帳號）。
