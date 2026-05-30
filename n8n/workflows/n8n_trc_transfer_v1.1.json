@@ -1,0 +1,818 @@
+{
+  "name": "台鐵山海線搭乘規劃",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($('輸入資料完整？').item.json[\"預計搭乘日\"]).toFormat('yyyy/MM/dd') }}&station={{ $('輸入資料完整？').item.json[\"轉乘站\"] }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        -592
+      ],
+      "id": "1f52f304-4c9a-4629-bb8a-59b8fdf463ee",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "formTitle": "搭乘基本資料",
+        "formDescription": "直達：不使用「轉乘站」。\n轉乘：使用指定「轉乘站」。\n預設比對車種：所有車種。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "預計搭乘日",
+              "fieldType": "date",
+              "defaultValue": "={{ $now.toFormat('yyyy/MM/dd') }}",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "轉乘站",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3360-彰化"
+                  },
+                  {
+                    "option": "3340-新烏日"
+                  },
+                  {
+                    "option": "3350-成功"
+                  },
+                  {
+                    "option": "2260-追分"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "開始",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3390-員林"
+                  },
+                  {
+                    "option": "3360-彰化"
+                  },
+                  {
+                    "option": "2200-大甲"
+                  },
+                  {
+                    "option": "3320-大慶"
+                  },
+                  {
+                    "option": "3300-台中"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "抵達",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3390-員林"
+                  },
+                  {
+                    "option": "3360-彰化"
+                  },
+                  {
+                    "option": "2200-大甲"
+                  },
+                  {
+                    "option": "3320-大慶"
+                  },
+                  {
+                    "option": "3300-台中"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -832,
+        -592
+      ],
+      "id": "77d610d4-8c07-4192-bf92-8b4b7d008b9b",
+      "name": "On form submission",
+      "webhookId": "e05a44c2-aab5-444e-94dc-83fcc4aaed92"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json[\"預計搭乘日\"]).toFormat('yyyy/MM/dd') }}&station={{ $json[\"開始\"] }}",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        -784
+      ],
+      "id": "f3de0142-eca3-46bc-89ec-626f6671b794",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($('輸入資料完整？').item.json[\"預計搭乘日\"]).toFormat('yyyy/MM/dd') }}&station={{ $json[\"抵達\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -384,
+        -400
+      ],
+      "id": "5e056fce-6d24-4ff2-8ac7-12dfdd0090af",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e52a8c56-d65c-422f-a838-004adc4ec818",
+              "leftValue": "={{ $json['開始'] }}",
+              "rightValue": "={{ $json[\"抵達\"] }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "ef1dc83f-bf6d-478a-9543-68f70129f0a4",
+              "leftValue": "={{ $json[\"預計搭乘日\"] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "57332721-a85c-46ad-944c-c151847769d7",
+              "leftValue": "={{ new Date($json[\"預計搭乘日\"]).toISOString() }}",
+              "rightValue": "={{ DateTime.fromISO($json[\"submittedAt\"]).setZone('Asia/Taipei').minus({ days: 7 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            },
+            {
+              "id": "8b1155a9-ee57-49c5-bcf7-68bdc092a34f",
+              "leftValue": "={{ new Date($json[\"預計搭乘日\"]).toISOString() }}",
+              "rightValue": "={{ DateTime.fromISO($json[\"submittedAt\"]).setZone('Asia/Taipei').plus({ months: 3 }) }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -608,
+        -592
+      ],
+      "id": "0e1f55d0-d0af-4867-a0da-4e0cd64c2dc9",
+      "name": "輸入資料完整？",
+      "notes": "1. 開始/抵達地點：開始與抵達不可相同地點。\n2. 預計搭乘日期：過去日期5日內，未來日期2個月內。"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 取得上一個節點傳來的 HTML 字串\nconst htmlContent = $input.all()[0].json.data || \"\";\n\nconst results = [];\n\n// 2. 依照「<li class=\"active\">」來切分「順行大區塊」與「逆行大區塊」\n// 我們用這個標籤當作切刀，把網頁分成好幾塊\nconst blocks = htmlContent.split(/<li\\s+class=\"active\">/);\n\n// blocks[0] 通常是開頭無用的 HTML，我們從 blocks[1] 開始處理\nfor (let i = 1; i < blocks.length; i++) {\n    const blockContent = blocks[i];\n    \n    // 3. 從這個區塊中精準找出方向（優先找 <span>，找不到就找 <h3> 內的文字）\n    let direction = \"未知\";\n    const spanMatch = blockContent.match(/<span>(順行|逆行)<\\/span>/);\n    const h3Match = blockContent.match(/<h3>\\s*([^<\\s]+)/);\n    \n    if (spanMatch) {\n        direction = spanMatch[1].trim();\n    } else if (h3Match) {\n        direction = h3Match[1].trim();\n    }\n    \n    // 4. 找出這個區塊內對應的 <table> 內容\n    const tableMatch = blockContent.match(/<table[^>]*>([\\s\\S]*?)<\\/table>/);\n    if (!tableMatch) continue; // 如果這塊沒有表格就跳過\n    \n    const tableContent = tableMatch[1];\n    \n    // 5. 解析表格內的每一列 <tr>\n    const trRegex = /<tr>([\\s\\S]*?)<\\/tr>/g;\n    let trMatch;\n    let isHeader = true; // 用來跳過每張表格的第一列（欄位標頭）\n    \n    while ((trMatch = trRegex.exec(tableContent)) !== null) {\n        if (isHeader) {\n            isHeader = false; \n            continue;\n        }\n        \n        const trContent = trMatch[1];\n        \n        // A. 提取車種車次 (從 class=\"links\" 的超連結文字抓取)\n        const trainMatch = trContent.match(/class=\"links\"[^>]*>([^<]+)</);\n        if (!trainMatch) continue;\n        \n        const trainNo = trainMatch[1].trim();\n        \n        // B. 提取該列中所有的 <td> 內容\n        const tdRegex = /<td>([\\s\\S]*?)<\\/td>/g;\n        let tdMatch;\n        const tds = [];\n        while ((tdMatch = tdRegex.exec(trContent)) !== null) {\n            tds.push(tdMatch[1].trim());\n        }\n        \n        // C. 清理所有 td 內的 HTML 標籤與空白\n        const cleanTds = tds.map(text => text.replace(/<[^>]+>/g, '').trim());\n        \n        // D. 過濾出真正的數據（排除純數字的項次、排除包含車次名稱的欄位）\n        const actualDataTds = cleanTds.filter(text => {\n            if (/^\\d+$/.test(text) || text.includes(trainNo)) return false;\n            return true;\n        });\n\n        // 經過前面過濾後，actualDataTds 的順序保證是：\n        // [0] -> 開車時間\n        // [1] -> 到達站\n        // [2] -> 服務設施備註\n        // [3] -> 狀態\n        \n        if (actualDataTds.length >= 2) {\n            results.push({\n                json: {\n                    direction: direction,                               // 順行、逆行\n                    train_no: trainNo,                                  // 車種車次\n                    departure_station: $('On form submission').first().json[\"開始\"], //開車車站\n                    departure_time: (actualDataTds[0] || \"\").replace(/^00:/, \"24:\"), // 開車時間 (00:20 轉 24:20)\n                    destination_station: actualDataTds[1] ? `往:${actualDataTds[1]}` : \"\",        // 到達站\n                    service: actualDataTds[2].replace(/[\\r\\n\\t]+/g, \" \").trim() || \"\",                    // 服務設施\n                    // status: actualDataTds[actualDataTds.length - 1] || \"\" // 狀態\n                    seat: /自強\\(3000\\)|普悠瑪|太魯閣/.test(trainNo) ? \"▲ reserved\" : \"\" // 不售無座\n                }\n            });\n        }\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -784
+      ],
+      "id": "e2502f1f-8a93-4886-91c0-4010523bc7cf",
+      "name": "起始站時刻"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 取得上一個節點傳來的 HTML 字串\nconst htmlContent = $input.all()[0].json.data || \"\";\n\nconst results = [];\n\n// 2. 依照「<li class=\"active\">」來切分「順行大區塊」與「逆行大區塊」\n// 我們用這個標籤當作切刀，把網頁分成好幾塊\nconst blocks = htmlContent.split(/<li\\s+class=\"active\">/);\n\n// blocks[0] 通常是開頭無用的 HTML，我們從 blocks[1] 開始處理\nfor (let i = 1; i < blocks.length; i++) {\n    const blockContent = blocks[i];\n    \n    // 3. 從這個區塊中精準找出方向（優先找 <span>，找不到就找 <h3> 內的文字）\n    let direction = \"未知\";\n    const spanMatch = blockContent.match(/<span>(順行|逆行)<\\/span>/);\n    const h3Match = blockContent.match(/<h3>\\s*([^<\\s]+)/);\n    \n    if (spanMatch) {\n        direction = spanMatch[1].trim();\n    } else if (h3Match) {\n        direction = h3Match[1].trim();\n    }\n    \n    // 4. 找出這個區塊內對應的 <table> 內容\n    const tableMatch = blockContent.match(/<table[^>]*>([\\s\\S]*?)<\\/table>/);\n    if (!tableMatch) continue; // 如果這塊沒有表格就跳過\n    \n    const tableContent = tableMatch[1];\n    \n    // 5. 解析表格內的每一列 <tr>\n    const trRegex = /<tr>([\\s\\S]*?)<\\/tr>/g;\n    let trMatch;\n    let isHeader = true; // 用來跳過每張表格的第一列（欄位標頭）\n    \n    while ((trMatch = trRegex.exec(tableContent)) !== null) {\n        if (isHeader) {\n            isHeader = false; \n            continue;\n        }\n        \n        const trContent = trMatch[1];\n        \n        // A. 提取車種車次 (從 class=\"links\" 的超連結文字抓取)\n        const trainMatch = trContent.match(/class=\"links\"[^>]*>([^<]+)</);\n        if (!trainMatch) continue;\n        \n        const trainNo = trainMatch[1].trim();\n        \n        // B. 提取該列中所有的 <td> 內容\n        const tdRegex = /<td>([\\s\\S]*?)<\\/td>/g;\n        let tdMatch;\n        const tds = [];\n        while ((tdMatch = tdRegex.exec(trContent)) !== null) {\n            tds.push(tdMatch[1].trim());\n        }\n        \n        // C. 清理所有 td 內的 HTML 標籤與空白\n        const cleanTds = tds.map(text => text.replace(/<[^>]+>/g, '').trim());\n        \n        // D. 過濾出真正的數據（排除純數字的項次、排除包含車次名稱的欄位）\n        const actualDataTds = cleanTds.filter(text => {\n            if (/^\\d+$/.test(text) || text.includes(trainNo)) return false;\n            return true;\n        });\n\n        // 經過前面過濾後，actualDataTds 的順序保證是：\n        // [0] -> 開車時間\n        // [1] -> 到達站\n        // [2] -> 服務設施備註\n        // [3] -> 狀態\n        \n        if (actualDataTds.length >= 2) {\n            results.push({\n                json: {\n                    direction: direction,                               // 順行、逆行\n                    train_no: trainNo,                                  // 車種車次\n                    departure_station: $('On form submission').first().json[\"抵達\"], //開車車站\n                    departure_time: (actualDataTds[0] || \"\").replace(/^00:/, \"24:\"), // 開車時間 (00:20 轉 24:20)\n                    destination_station: actualDataTds[1] ? `往:${actualDataTds[1]}` : \"\",        // 到達站\n                    service: actualDataTds[2].replace(/[\\r\\n\\t]+/g, \" \").trim() || \"\",                    // 服務設施\n                    // status: actualDataTds[actualDataTds.length - 1] || \"\" // 狀態\n                    seat: /自強\\(3000\\)|普悠瑪|太魯閣/.test(trainNo) ? \"▲ reserved\" : \"\" // 不售無座\n                }\n            });\n        }\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -400
+      ],
+      "id": "4191f462-d833-4fc2-8d6a-7520859fd310",
+      "name": "抵達站時刻"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 取得上一個節點傳來的 HTML 字串\nconst htmlContent = $input.all()[0].json.data || \"\";\n\nconst results = [];\n\n// 2. 依照「<li class=\"active\">」來切分「順行大區塊」與「逆行大區塊」\n// 我們用這個標籤當作切刀，把網頁分成好幾塊\nconst blocks = htmlContent.split(/<li\\s+class=\"active\">/);\n\n// blocks[0] 通常是開頭無用的 HTML，我們從 blocks[1] 開始處理\nfor (let i = 1; i < blocks.length; i++) {\n    const blockContent = blocks[i];\n    \n    // 3. 從這個區塊中精準找出方向（優先找 <span>，找不到就找 <h3> 內的文字）\n    let direction = \"未知\";\n    const spanMatch = blockContent.match(/<span>(順行|逆行)<\\/span>/);\n    const h3Match = blockContent.match(/<h3>\\s*([^<\\s]+)/);\n    \n    if (spanMatch) {\n        direction = spanMatch[1].trim();\n    } else if (h3Match) {\n        direction = h3Match[1].trim();\n    }\n    \n    // 4. 找出這個區塊內對應的 <table> 內容\n    const tableMatch = blockContent.match(/<table[^>]*>([\\s\\S]*?)<\\/table>/);\n    if (!tableMatch) continue; // 如果這塊沒有表格就跳過\n    \n    const tableContent = tableMatch[1];\n    \n    // 5. 解析表格內的每一列 <tr>\n    const trRegex = /<tr>([\\s\\S]*?)<\\/tr>/g;\n    let trMatch;\n    let isHeader = true; // 用來跳過每張表格的第一列（欄位標頭）\n    \n    while ((trMatch = trRegex.exec(tableContent)) !== null) {\n        if (isHeader) {\n            isHeader = false; \n            continue;\n        }\n        \n        const trContent = trMatch[1];\n        \n        // A. 提取車種車次 (從 class=\"links\" 的超連結文字抓取)\n        const trainMatch = trContent.match(/class=\"links\"[^>]*>([^<]+)</);\n        if (!trainMatch) continue;\n        \n        const trainNo = trainMatch[1].trim();\n        \n        // B. 提取該列中所有的 <td> 內容\n        const tdRegex = /<td>([\\s\\S]*?)<\\/td>/g;\n        let tdMatch;\n        const tds = [];\n        while ((tdMatch = tdRegex.exec(trContent)) !== null) {\n            tds.push(tdMatch[1].trim());\n        }\n        \n        // C. 清理所有 td 內的 HTML 標籤與空白\n        const cleanTds = tds.map(text => text.replace(/<[^>]+>/g, '').trim());\n        \n        // D. 過濾出真正的數據（排除純數字的項次、排除包含車次名稱的欄位）\n        const actualDataTds = cleanTds.filter(text => {\n            if (/^\\d+$/.test(text) || text.includes(trainNo)) return false;\n            return true;\n        });\n\n        // 經過前面過濾後，actualDataTds 的順序保證是：\n        // [0] -> 開車時間\n        // [1] -> 到達站\n        // [2] -> 服務設施備註\n        // [3] -> 狀態\n        \n        if (actualDataTds.length >= 2) {\n            results.push({\n                json: {\n                    direction: direction,                               // 順行、逆行\n                    train_no: trainNo,                                  // 車種車次\n                    departure_station: $('On form submission').first().json[\"轉乘站\"], //開車車站\n                    departure_time: (actualDataTds[0] || \"\").replace(/^00:/, \"24:\"), // 開車時間 (00:20 轉 24:20)\n                    destination_station: actualDataTds[1] ? `往:${actualDataTds[1]}` : \"\",        // 到達站\n                    service: actualDataTds[2].replace(/[\\r\\n\\t]+/g, \" \").trim() || \"\",                    // 服務設施\n                    // status: actualDataTds[actualDataTds.length - 1] || \"\" // 狀態\n                    seat: /自強\\(3000\\)|普悠瑪|太魯閣/.test(trainNo) ? \"▲ reserved\" : \"\" // 不售無座\n                }\n            });\n        }\n    }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -592
+      ],
+      "id": "7a7de7af-5bd7-4b90-9007-082b2f53a4be",
+      "name": "轉乘站時刻"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 讀取相關節點資料\nconst transferData = $(\"轉乘站時刻\").all();\nconst startData = $(\"起始站時刻\").all();\n\n// 2. 建立起始站對照 Map\nconst startMap = new Map(startData.map(i => [i.json.train_no, i.json]));\n\n// 3. 進行比對與過濾\nreturn transferData\n  .map(item => {\n    const trainNo = item.json.train_no;\n    const matchedStart = startMap.get(trainNo);\n\n    return {\n      json: {\n        \"direction\": item.json.direction,\n        \"train_no\": trainNo,\n        \"destination_station\": item.json.destination_station,\n        \"service\": item.json.service,\n        // \"status\": item.json.status,\n        // 串接起始站資料（若查無則留白）\n        \"start_station\": matchedStart ? matchedStart.departure_station : \"\",\n        \"start_time\": matchedStart ? matchedStart.departure_time : \"\",\n        // 轉乘站\n        \"transfer_station\": item.json.departure_station,\n        \"transfer_time\": item.json.departure_time,\n        // 抵達站在此階段留白\n        \"arrival_station\": \"\",\n        \"arrival_time\": \"\",\n        \"seat\": item.json.seat\n      }\n    };\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -784
+      ],
+      "id": "e3c51125-33af-4efc-8f24-149675d1a834",
+      "name": "轉乘比對起始"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 讀取相關節點資料\nconst transferData = $(\"轉乘站時刻\").all();\nconst arrivalData = $(\"抵達站時刻\").all();\n\n// 2. 建立抵達站對照 Map\nconst arrivalMap = new Map(arrivalData.map(i => [i.json.train_no, i.json]));\n\n// 3. 進行比對與過濾\nreturn transferData\n  .map(item => {\n    const trainNo = item.json.train_no;\n    const matchedArrival = arrivalMap.get(trainNo);\n\n    return {\n      json: {\n        \"direction\": item.json.direction,\n        \"train_no\": trainNo,\n        \"destination_station\": item.json.destination_station,\n        \"service\": item.json.service,\n        // \"status\": item.json.status,\n        // 起始站在此階段留白\n        \"start_station\": \"\",\n        \"start_time\": \"\",\n        // 轉乘站\n        \"transfer_station\": item.json.departure_station,\n        \"transfer_time\": item.json.departure_time,        \n        // 串接抵達站資料（若查無則留白）\n        \"arrival_station\": matchedArrival ? matchedArrival.departure_station : \"\",\n        \"arrival_time\": matchedArrival ? matchedArrival.departure_time : \"\",\n        \"seat\": item.json.seat\n      }\n    };\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -592
+      ],
+      "id": "b0d6b0d1-43cc-4229-91dd-dc9e2971d2cd",
+      "name": "轉乘比對抵達"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "transfer_time"
+            },
+            {
+              "fieldName": "train_no"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -688
+      ],
+      "id": "e7435580-6ba9-4f50-8efa-86a934dc1d78",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        960,
+        -688
+      ],
+      "id": "200b8407-fab1-449a-b2cd-df85c25e8747",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "numberInputs": 3,
+        "useDataOfInput": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        64,
+        -608
+      ],
+      "id": "76eb122c-7b9d-4f81-a3ab-b0468db677d1",
+      "name": "等待爬蟲完成"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        512,
+        -688
+      ],
+      "id": "9b04b2b4-1eb0-46e3-b17d-e65f970c3ac4",
+      "name": "等待轉乘比對"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "start_time"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        736,
+        -400
+      ],
+      "id": "25446493-1b42-49fc-ba5c-cb0f07dd17b9",
+      "name": "Sort1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -400
+      ],
+      "id": "706551f7-cb3e-430f-b3d3-2369df401db8",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 讀取相關節點資料\nconst startData = $(\"起始站時刻\").all();\nconst arrivalData = $(\"抵達站時刻\").all();\n\n// 2. 建立抵達站對照 Map\nconst arrivalMap = new Map(arrivalData.map(i => [i.json.train_no, i.json]));\n\n// 3. 進行比對與過濾\nreturn startData\n  .map(item => {\n    const trainNo = item.json.train_no;\n    const matchedArrival = arrivalMap.get(trainNo);\n\n    return {\n      json: {\n        \"direction\": item.json.direction,\n        \"train_no\": trainNo,\n        \"destination_station\": item.json.destination_station,\n        \"service\": item.json.service,\n        // \"status\": item.json.status,\n        // 本身為起始站基底，直接帶入\n        \"start_station\": item.json.departure_station,\n        \"start_time\": item.json.departure_time,\n        // 無轉乘，故轉乘站與轉乘時間留白\n        \"transfer_station\": \"\",\n        \"transfer_time\": \"\",\n        // 串接抵達站資料（若查無則留白）\n        \"arrival_station\": matchedArrival ? matchedArrival.departure_station : \"\",\n        \"arrival_time\": matchedArrival ? matchedArrival.departure_time : \"\",\n        \"seat\": item.json.seat\n      }\n    };\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -400
+      ],
+      "id": "154041eb-4745-4c1f-9ce7-c86b91058231",
+      "name": "起始比對抵達"
+    },
+    {
+      "parameters": {
+        "jsCode": "const directionLookup = {\n    \"大甲\": { \"彰化\": \"逆行\", \"員林\": \"逆行\", \"台中\": \"逆行\", \"大慶\": \"逆行\" },\n    \"彰化\": { \"大甲\": \"順行\", \"台中\": \"順行\", \"大慶\": \"順行\", \"員林\": \"逆行\" },\n    \"大慶\": { \"大甲\": \"逆行\", \"彰化\": \"逆行\", \"員林\": \"逆行\", \"台中\": \"順行\" },\n    \"台中\": { \"大甲\": \"逆行\", \"彰化\": \"逆行\", \"員林\": \"逆行\", \"大慶\": \"逆行\" },\n    \"員林\": { \"彰化\": \"順行\", \"大甲\": \"順行\", \"台中\": \"順行\", \"大慶\": \"順行\" }\n};\n\nconst item = $(\"輸入資料完整？\").first().json;\n\n// 1. 切出站名對照字典\nconst start = item[\"開始\"] ? item[\"開始\"].split('-')[1] : \"\";\nconst end = item[\"抵達\"] ? item[\"抵達\"].split('-')[1] : \"\";\nconst direction = directionLookup[start]?.[end] || \"未知\";\n\n// 2. 嚴格維持你指定的 JSON 欄位架構與順序\nreturn [{\n    json: {\n        \"預計搭乘日\": item[\"預計搭乘日\"],\n        \"轉乘站\": item[\"轉乘站\"],\n        \"開始\": item[\"開始\"],\n        \"抵達\": item[\"抵達\"],\n        \"直達方向\": direction, // 🎯 完美插在抵達下方\n        \"submittedAt\": item[\"submittedAt\"],\n        \"formMode\": item[\"formMode\"]\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -400
+      ],
+      "id": "829c074d-64c0-4fec-aa25-3a9bba0076ab",
+      "name": "直達方向判定"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b0fbc155-e74e-4bf0-bb83-f1ec375bd031",
+              "leftValue": "={{ $json.direction }}",
+              "rightValue": "={{ $('直達方向判定').first().json[\"直達方向\"] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        -400
+      ],
+      "id": "0c897b45-5c3f-4fab-a1e7-4290b1acf57d",
+      "name": "Filter_直達方向"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c683d042-b7de-4b24-b69c-7fd5ba4a90e7",
+              "leftValue": "={{ Number($json.transfer_time.replace(':', '')) }}",
+              "rightValue": "={{ Number($json.start_time.replace(':', '')) || 0 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "b80b8e09-96c8-4249-9f57-b5716aa06ca0",
+              "leftValue": "={{ Number($json.transfer_time.replace(':', '')) }}",
+              "rightValue": "={{ Number($json.arrival_time.replace(':', '')) || 2359 }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1408,
+        -688
+      ],
+      "id": "a0a39665-9abd-43f9-9205-3c1af1cdf59c",
+      "name": "Filter_起始早於抵達"
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "=臺鐵時刻表{{ $('輸入資料完整？').first().json['預計搭乘日'] }}_{{ $('輸入資料完整？').first().json['開始'].split('-')[1] }}到{{ $('輸入資料完整？').first().json['抵達'].split('-')[1] }}_{{ $('輸入資料完整？').first().json['轉乘站'].split('-')[1] }}轉乘_{{ $now.setZone('Asia/Taipei').format('yyyyMMdd_HHmmss') }}.csv",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1632,
+        -688
+      ],
+      "id": "cb811136-e256-4645-83c3-e2ffe2efe572",
+      "name": "Convert to File_轉乘"
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "=臺鐵時刻表{{ $('輸入資料完整？').first().json['預計搭乘日'] }}_{{ $('輸入資料完整？').first().json['開始'].split('-')[1] }}到{{ $('輸入資料完整？').first().json['抵達'].split('-')[1] }}_直達_{{ $now.setZone('Asia/Taipei').format('yyyyMMdd_HHmmss') }}.csv",
+          "headerRow": true
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        -400
+      ],
+      "id": "24458dbc-a8bb-48c8-a8ac-da59d65fa7ab",
+      "name": "Convert to File_直達"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f305eb09-d330-4d98-9c94-f6469959f12c",
+              "leftValue": "={{ $json.start_station }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b97f47c7-6314-4ccd-a424-5757d7458acd",
+              "leftValue": "={{ $json.arrival_station }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        -688
+      ],
+      "id": "09f70111-0368-4253-9108-01e99d91a1bd",
+      "name": "Filter_起迄任一站有停靠"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "輸入資料完整？",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "轉乘站時刻",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "起始站時刻",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "抵達站時刻",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "輸入資料完整？": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "起始站時刻": {
+      "main": [
+        [
+          {
+            "node": "等待爬蟲完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "抵達站時刻": {
+      "main": [
+        [
+          {
+            "node": "等待爬蟲完成",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "轉乘站時刻": {
+      "main": [
+        [
+          {
+            "node": "等待爬蟲完成",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "轉乘比對起始": {
+      "main": [
+        [
+          {
+            "node": "等待轉乘比對",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "轉乘比對抵達": {
+      "main": [
+        [
+          {
+            "node": "等待轉乘比對",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Filter_起迄任一站有停靠",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待爬蟲完成": {
+      "main": [
+        [
+          {
+            "node": "轉乘比對起始",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "轉乘比對抵達",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "直達方向判定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待轉乘比對": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort1": {
+      "main": [
+        [
+          {
+            "node": "Filter_直達方向",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File_直達",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "起始比對抵達": {
+      "main": [
+        [
+          {
+            "node": "Sort1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "直達方向判定": {
+      "main": [
+        [
+          {
+            "node": "起始比對抵達",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter_直達方向": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter_起始早於抵達": {
+      "main": [
+        [
+          {
+            "node": "Convert to File_轉乘",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File_轉乘": {
+      "main": [
+        []
+      ]
+    },
+    "Filter_起迄任一站有停靠": {
+      "main": [
+        [
+          {
+            "node": "Filter_起始早於抵達",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "72646040-f791-4bc5-b9e3-0f6ffb64da9b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9c954e109d7700d724bb264cfa40a252a104cc3c6836f82057051221b83edf02"
+  },
+  "id": "EJlsbxHVrjGFGMPy",
+  "tags": []
+}
