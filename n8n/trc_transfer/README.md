@@ -192,6 +192,12 @@ graph LR
    ```n8n
    https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/querybystationblank?rideDate={{ DateTime.fromISO($json["預計搭乘日"]).toFormat('yyyy/MM/dd') }}&station={{ $json["開始"] }}
    ```
+
+> `Problem in node 'HTTP Request' SSL Issue: consider using the 'Ignore SSL issues' option`
+> 這個報錯是來自 SSL 憑證問題。<br>
+> 當 n8n 的 HTTP Request 節點嘗試透過 HTTPS 去發送請求時，它發現中間的憑證不對勁(被公司換成了內部自簽憑證)，出於安全保護機制，n8n 就直接阻斷了這次連線。<br>
+> 解法：在報錯節點的設定面板中，找到 Options 的 Add Option 選單，在選單中找到 `Ignore SSL Issues`，並將它開啟。
+
 - 正確解析 HTML 並儲存成 JSON：使用 Code 節點將原始欄位（車種車次、出發時間、終點站、設施服務、狀態）轉成 JSON，並補上行駛方向與無座票資訊。
     ```JS
     direction: direction,                                                   // 順行、逆行
