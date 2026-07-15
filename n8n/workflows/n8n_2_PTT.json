@@ -1,0 +1,120 @@
+{
+  "name": "n8n_2_PTT",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "04e23b9e-baca-4aca-ab2d-66f79eab1d8d",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "title",
+              "cssSelector": ".r-ent .title a",
+              "returnArray": true
+            },
+            {
+              "key": "link",
+              "cssSelector": ".r-ent .title a",
+              "returnValue": "attribute",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ea6cfa7c-e8bc-4c08-8dde-280afaab34aa",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "title, link ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "247fe34f-661a-4493-bf86-9e35faaf3567",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "url": "https://www.ptt.cc/bbs/Stock/index.html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "493e0eba-91b6-4751-a126-6f5e4aa67499",
+      "name": "PTT_Stock版標題"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "PTT_Stock版標題",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PTT_Stock版標題": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7cca7bf6-3994-409a-8e7c-e1f05a21dc73",
+  "meta": {
+    "instanceId": "53f0706c7c16693a08e39d21f508369436849570039bb3373838140143112e87"
+  },
+  "id": "v05FY6jxLoG9Vit7",
+  "tags": []
+}
