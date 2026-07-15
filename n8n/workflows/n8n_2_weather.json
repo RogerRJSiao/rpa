@@ -1,0 +1,281 @@
+{
+  "name": "n8n_2_weather",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "氣象開放資料平台",
+        "formDescription": "請先到中央氣象署的 open weather data 網站(https://opendata.cwa.gov.tw/index) 完成註冊，並取得會員授權碼。",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "會員授權碼"
+            },
+            {
+              "fieldLabel": "日期",
+              "fieldType": "date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -864,
+        -128
+      ],
+      "id": "e1926ec4-82ab-415e-822b-70dc86eedc7e",
+      "name": "On form submission",
+      "webhookId": "e079c00e-4f9e-430a-a269-a8b71faaeaf5"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "records.location",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        -224
+      ],
+      "id": "086d6a86-e1dd-4101-b998-3f11056826f1",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "weatherElement",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        -224
+      ],
+      "id": "44ad5235-53f7-478e-b13c-b74adbc06b09",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "time",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -224
+      ],
+      "id": "a35138cb-d461-45aa-873a-488e748ff86a",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "parameter",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -224
+      ],
+      "id": "8b8117ad-886d-44db-b7d8-b94e1e0e6e05",
+      "name": "Split Out3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bcf75f0c-37bb-431d-b1db-95c443bb7119",
+              "name": "locationName",
+              "value": "={{ $('Split Out').item.json.locationName }}",
+              "type": "string"
+            },
+            {
+              "id": "78b23227-b5bc-4c48-a61b-00a9731765e7",
+              "name": "elementName",
+              "value": "={{ $('Split Out1').item.json.elementName }}",
+              "type": "string"
+            },
+            {
+              "id": "a0639ed2-fac2-42f0-8710-6afe9954f416",
+              "name": "startTime",
+              "value": "={{ $('Split Out2').item.json.startTime }}",
+              "type": "string"
+            },
+            {
+              "id": "b8d69e62-4cf5-4278-9286-9c1e970cb075",
+              "name": "endTime",
+              "value": "={{ $('Split Out2').item.json.endTime }}",
+              "type": "string"
+            },
+            {
+              "id": "7d2bd3fd-f04b-48a2-b55c-7bbc55d1cfba",
+              "name": "Value",
+              "value": "={{ $('Split Out2').item.json.parameter.parameterValue ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "b5a38237-4b3d-4e78-b91f-e12f6cd042d8",
+              "name": "Name",
+              "value": "={{ $('Split Out2').item.json.parameter.parameterName ?? ''}}",
+              "type": "string"
+            },
+            {
+              "id": "e2726e67-2a79-4820-b77e-4a9121d416d6",
+              "name": "Unit",
+              "value": "={{ $('Split Out2').item.json.parameter.parameterUnit ?? ''}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        -224
+      ],
+      "id": "6254739f-0d37-41df-9727-a35ff97ec243",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json['會員授權碼'] }}"
+            },
+            {
+              "name": "format",
+              "value": "JSON"
+            },
+            {
+              "name": "locationName",
+              "value": "彰化縣,臺中市"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -640,
+        -128
+      ],
+      "id": "7e9f3a79-374e-4788-9b04-1fe5254fa558",
+      "name": "臺中彰化_36小時預報"
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - 整理天氣預報資料\nconst input = $input.first().json;\n\nconst locations = input.records.location;\nconst results = [];\n\nfor (const loc of locations) {\n  const locationName = loc.locationName;\n\n  // 先把各 elementName 的 time 陣列整理成 map: { startTime_endTime: {...} }\n  const timeMap = {};\n\n  for (const element of loc.weatherElement) {\n    const elementName = element.elementName; // Wx, PoP, MinT, CI, MaxT...\n\n    for (const t of element.time) {\n      const key = `${t.startTime}__${t.endTime}`;\n\n      if (!timeMap[key]) {\n        timeMap[key] = {\n          locationName,\n          startTime: t.startTime,\n          endTime: t.endTime,\n        };\n      }\n\n      // 依照 elementName 塞值\n      if (elementName === \"Wx\") {\n        timeMap[key].weather = t.parameter.parameterName; // 天氣現象文字\n        timeMap[key].weatherCode = t.parameter.parameterValue; // 天氣代碼\n      } else if (elementName === \"PoP\") {\n        timeMap[key].rainProbability = t.parameter.parameterName; // 降雨機率(%)\n      } else if (elementName === \"MinT\") {\n        timeMap[key].minTemp = t.parameter.parameterName; // 最低溫\n      } else if (elementName === \"MaxT\") {\n        timeMap[key].maxTemp = t.parameter.parameterName; // 最高溫\n      } else if (elementName === \"CI\") {\n        timeMap[key].comfort = t.parameter.parameterName; // 舒適度\n      }\n    }\n  }\n\n  // 把 map 轉成陣列,加進總結果\n  for (const key in timeMap) {\n    results.push(timeMap[key]);\n  }\n}\n\n// 回傳給下一個 node,每筆資料是一個 item\nreturn results.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        -32
+      ],
+      "id": "efd9ba79-9970-459c-a5af-502bca775e47",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "臺中彰化_36小時預報",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Split Out3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "臺中彰化_36小時預報": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "16bd7535-6b25-4632-a3ec-e0cdc8a6793f",
+  "meta": {
+    "instanceId": "53f0706c7c16693a08e39d21f508369436849570039bb3373838140143112e87"
+  },
+  "id": "g6eBuTyppdKOBwAA",
+  "tags": []
+}
