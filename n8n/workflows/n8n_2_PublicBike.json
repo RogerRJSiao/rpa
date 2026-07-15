@@ -1,0 +1,210 @@
+{
+  "name": "n8n_2_PublicBike",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -48
+      ],
+      "id": "088b7bf1-dc0c-4122-a2ba-9d3bf57c2941",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "352c251f-19f3-406e-8468-7a24e6d71e92",
+      "name": "YouBike2.0臺北市公共自行車"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4c5cd208-c068-48f4-aeab-bbf3f69e725f",
+              "leftValue": "={{ $json.sarea }}",
+              "rightValue": "大安區",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "18d18b09-110f-4654-8e8d-90f96415583e",
+              "leftValue": "={{ $json.available_rent_bikes }}",
+              "rightValue": 10,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        -48
+      ],
+      "id": "1a1cba72-e15a-4255-8ecb-32622a41358e",
+      "name": "大安區+10輛以上"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1342f86-f51c-4887-843f-146d26c111c4",
+              "name": "站點",
+              "value": "={{ $json.sna }}",
+              "type": "string"
+            },
+            {
+              "id": "bd3577dd-7c4e-41a3-b253-3417825f0d8d",
+              "name": "地址",
+              "value": "={{ $json.ar }}",
+              "type": "string"
+            },
+            {
+              "id": "2de8bb9b-c299-4c1b-b646-d86fe1573014",
+              "name": "可借車數",
+              "value": "={{ $json.available_rent_bikes }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        304,
+        -48
+      ],
+      "id": "90ec13ee-2fa8-41c9-ac29-3ac166f08a9a",
+      "name": "只取特定欄位"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "可借車數",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        528,
+        -48
+      ],
+      "id": "3d9095b0-0d11-4be0-bf51-82cb58ff9960",
+      "name": "排序可借車數"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -48
+      ],
+      "id": "f9059ac2-64c3-4dff-8ca6-1a1126a1ff97",
+      "name": "只取前5筆"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "YouBike2.0臺北市公共自行車",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouBike2.0臺北市公共自行車": {
+      "main": [
+        [
+          {
+            "node": "大安區+10輛以上",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "大安區+10輛以上": {
+      "main": [
+        [
+          {
+            "node": "只取特定欄位",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "只取特定欄位": {
+      "main": [
+        [
+          {
+            "node": "排序可借車數",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "排序可借車數": {
+      "main": [
+        [
+          {
+            "node": "只取前5筆",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "526c6f97-61f0-4cc5-97e8-7de2d3b43f3d",
+  "meta": {
+    "instanceId": "53f0706c7c16693a08e39d21f508369436849570039bb3373838140143112e87"
+  },
+  "id": "YvORmiVGTSLwDbcZ",
+  "tags": []
+}

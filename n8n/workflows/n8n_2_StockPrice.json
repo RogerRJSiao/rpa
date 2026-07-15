@@ -1,0 +1,197 @@
+{
+  "name": "n8n_2_StockPrice",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        96
+      ],
+      "id": "5e260541-a170-4ed8-8141-7b0a394dee41",
+      "name": "臺灣證券交易所OpenAPI"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "28cd29e0-08cd-4e18-9b74-459a4effdbbb",
+              "leftValue": "={{ $json.Code }}",
+              "rightValue": "2330",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "dd2dc914-6414-46ff-b8dc-378481a1e7e2",
+              "leftValue": "={{ $json.Code }}",
+              "rightValue": "0050",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "f926e79e-1a8c-484d-9fb1-bff8c2b882c6",
+              "leftValue": "={{ $json.Code }}",
+              "rightValue": "0056",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        96
+      ],
+      "id": "8d8f15ac-8bf3-48a1-85d2-dc7ea67152f0",
+      "name": "選出標的"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fde48457-052d-4309-bde7-7c716d36523e",
+              "name": "代碼",
+              "value": "={{ $json.Code }}",
+              "type": "string"
+            },
+            {
+              "id": "3655fa89-0076-4448-9570-9c81c3a32a19",
+              "name": "名稱",
+              "value": "={{ $json.Name }}",
+              "type": "string"
+            },
+            {
+              "id": "891ac98a-9ce0-43f9-a11d-af80dfff9322",
+              "name": "收盤價",
+              "value": "={{ $json.LowestPrice }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        96
+      ],
+      "id": "42769bc1-1593-418b-b746-bd5608ef71d0",
+      "name": "指定欄位"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "131b20cc-f9a7-4bec-84a0-e07c63e2e36f",
+      "name": "手動觸發"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        192
+      ],
+      "id": "0d622b8b-541d-4785-8379-96d2dab4c8ad",
+      "name": "排程觸發"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "臺灣證券交易所OpenAPI": {
+      "main": [
+        [
+          {
+            "node": "選出標的",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "選出標的": {
+      "main": [
+        [
+          {
+            "node": "指定欄位",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "手動觸發": {
+      "main": [
+        [
+          {
+            "node": "臺灣證券交易所OpenAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "排程觸發": {
+      "main": [
+        [
+          {
+            "node": "臺灣證券交易所OpenAPI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timezone": "Asia/Taipei"
+  },
+  "versionId": "2fa6a5ff-b3b1-46f8-8111-7102fcf45bef",
+  "meta": {
+    "instanceId": "53f0706c7c16693a08e39d21f508369436849570039bb3373838140143112e87"
+  },
+  "id": "4ZP5KQDMUsINCoXE",
+  "tags": []
+}
