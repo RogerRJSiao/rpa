@@ -35,18 +35,27 @@
 > 1. 用 ngrok 把內部服務，設定公開對外網址。
 > 2. 設定 Google 授權，啟用 API 服務。
 > 3. 建立 n8n 節點，測試自動化工作項。
+> - 目的：把本機執行的 n8n 服務 (`localhost:5678`)，透過 ngrok 建立的外部網址 (如 `https://abc123.ngrok-free.dev`) 對外公開。<br>
 
 **A. 自建對外 n8n 服務**
 1. 註冊並登錄 ngrok 帳號。https://ngrok.com/ 
 2. 在 ngrok 取得 ngrok 固定網址、ngrok Authtoken，
 3. 設定本地的環境變數。(依據 OS 種類、n8n 安裝方式，可參考 https://ngrok-gen.cann.workers.dev/)
 4. 開啟一個 cmd，啟動 n8n 服務。
-5. 開啟另一個新的 cmd，安裝並啟動 ngrok 主程式。(可能優化小程式，一鍵執行)
-6. 輸入 ngrok 固定網址到網址列。
+5. 開啟另一個新的 cmd，安裝並啟動 ngrok 主程式。(可能優化成一支小程式，一鍵執行)
+6. 輸入 ngrok 固定網址到網址列，可看到 n8n 服務。
 
-     > 目的：把 `(n8n) localhost:5678` 轉成外部網址 `abc.ngrok.free-domain`。<br>
-     > 實際運作：user 輸入建置完成的 ngrok 外部網址，把請求丟給 ngrok 轉給本地 ngrok 主程式，再導向 localhost:5678。<br>
-     > ngrok 免費版提供 20k HTTP/HTTPS 的請求服務。
+     > **NGROK** (ngrok 免費版提供 20k HTTP/HTTPS 的請求服務。(開發/測試階段專用))<br> 
+     > 
+     > **案例 1 - n8n 內部服務對外公開**
+     > - Request：使用者在瀏覽器輸入 ngrok 外部網址發出 HTTP Request → 先送達 ngrok 雲端的 Edge Server → 透過事先建立好的 Tunnel (本機 ngrok agent 主動建立的持久連線) 反向轉發給本機的 ngrok agent → agent 再將 Request 轉發至本機的 n8n 服務。
+     > - Response：n8n 處理該 Request 並產生 Response → 依原路徑回傳回應 (由 n8n → ngrok agent → Tunnel → ngrok Edge Server → 最終送達使用者瀏覽器)。
+     >
+     > 
+     > **案例 2 - LINE 即時問答式聊天機器人**
+     > 1. 運作原理：LINE Bot Webhook 指向 ngrok 給的 HTTPS 網址，請求先送達 ngrok 雲端伺服器，再透過本機事先建立好的 Tunnel 轉發給本機的 ngrok agent，agent 接著把請求導向本機執行的後端程式，再呼叫 LINE 的 Reply API，帶入該次 webhook 事件附帶的 replyToken + 回覆內容，直接送達使用者的 LINE App。
+     > 2. 限制：webhook 進來後先驗證簽章才處理。後端程式需在 2 秒內回覆 HTTP 200。replyToken 只能用一次，有時效性。
+     > 3. 收費：Reply API 是機器人針對使用者傳來的訊息進行的自動回覆，屬於「不列入計價的訊息」。只有 Push API 機器人在任何時間點主動對好友發送訊息，才會被算進每月的訊息額度、產生費用。
 
 **B. 串接 Google 服務** ([參考資料](https://5xcampus.notion.site/Google-185df074dc7f809c9762ffd042ac67d3))
 1. 新增並選取 Google 新的專案。
