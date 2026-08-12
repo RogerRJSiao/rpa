@@ -57,11 +57,11 @@
      > 2. 限制：webhook 進來後先驗證簽章才處理。後端程式需在 2 秒內回覆 HTTP 200。replyToken 只能用一次，有時效性。
      > 3. 收費：Reply API 是機器人針對使用者傳來的訊息進行的自動回覆，屬於「不列入計價的訊息」。只有 Push API 機器人在任何時間點主動對好友發送訊息，才會被算進每月的訊息額度、產生費用。
 
-**B. 串接 Google 服務** ([參考資料](https://5xcampus.notion.site/Google-185df074dc7f809c9762ffd042ac67d3))
-1. 新增並選取 Google 新的專案。
-2. 啟用 API 服務 (如 Gmail、Drive、Calendar、Sheets)。
+**B. 串接 Google 服務** ([操作步驟](https://5xcampus.notion.site/Google-185df074dc7f809c9762ffd042ac67d3)、[線上學習](https://youtu.be/wX6ZMZ-xwd0?si=DHox-h6MifH2AvWk))
+1. 新增一個 Google Cloud 新的專案。[Google Cloud Console](https://cloud.google.com/cloud-console)
+2. 在這個雲端專案，啟用 Google 的 API 服務 (如 Gmail、Drive、Calendar、Sheets)。
 3. 設定「OAuth」(電子郵件、外部、聯絡資訊、同意服務政策)。
-4. 開啟 n8n 畫面，(左上) 取得 Gmail 重新導向 URI 的 Credential。
+4. 開啟 n8n 畫面，(左導覽列上方) 取得 Gmail 重新導向 URI 的 Credential。
 5. 回到 Google 專案，建立「OAuth 用戶端」(網頁應用程式、貼上從 n8n 取得的 New Credentials)，取得 API 服務的 Client ID、Client Secret (只能取得一次，高機密性)。
 6. 再回到 n8n 畫面，貼上 Client ID、Client Secret，連線 API 成功是「已封鎖存取權...」。
 7. 回到 Google 專案，在設定「目標對象」頁面，完成「發布應用程式」。
