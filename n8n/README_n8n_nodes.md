@@ -73,6 +73,10 @@
 
 1. 取得 API key。
    - 另解 (不建議用在部分閉源模型)：使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 規避另外購買 token 的需求。
-2. 建立「AI Agent」節點，把 API key 貼到這個節點，選取 Model (請留意閉源模型的 token 用量、費率)。
-3. 設定「AI Agent」節點細項
-   - Options > System Message：加上語言規則、回答風格、可回答範圍、資訊不足時等限制。(重要!!)
+2. 建立並設定「AI Agent」節點細項
+   - 下方的「Chat Model」介面，貼上 API key，並選取 Model，(請留意閉源模型的 token 用量、費率)。
+   - 節點本身 Options > System Message：加上語言規則、回答風格、可回答範圍、資訊不足時等限制。(重要!!)
+   - 下方的「Memory」介面，選取「Simple Memory」或其他 DB (如 Redis 記憶體資料庫、Postgres 關聯式資料庫)，存取對話上下文。
+   - 下方的「Tool」介面，加掛工具如「Date & Time」和「HTTP request」，增加參考資料來源。
+   - 節點本身 把 Source of Prompt 的預設「Connected Chat...」(聊天框) 改成「Define below」，並且在 Prompt (User Message) 加上提示詞和指定內容的變數。
+3. 重複 1.、2. 步驟，串接多個 Agent 服務節點。如收信 -> Agent 1 -> Agent 2 -> 寄信。
