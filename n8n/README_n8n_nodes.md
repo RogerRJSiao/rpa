@@ -68,3 +68,11 @@
 8. 再回到 n8n 畫面，點擊 `Sign in with Google` (點擊進階 + 勾選存取範圍)。
 
     > 實際運作：WEB A 服務 -> Gmail 登入 -> 跳出登入 Gmail 視窗 -> OAuth 授權成功 -> 已授權的重新導向 URI (WEB A)。
+
+### 串接 AI Agent - 以 Open AI Model 為例
+
+1. 取得 API key。
+   - 另解 (不建議用在部分閉源模型)：使用 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 規避另外購買 token 的需求。
+2. 建立「AI Agent」節點，把 API key 貼到這個節點，選取 Model (請留意閉源模型的 token 用量、費率)。
+3. 設定「AI Agent」節點細項
+   - Options > System Message：加上語言規則、回答風格、可回答範圍、資訊不足時等限制。(重要!!)
